@@ -1,0 +1,42 @@
+[
+  {
+    "label": "metal",
+    "prob": 0.5006000399589539,
+    "range_start": 112,
+    "doppler_start": 10,
+    "range_stop": 119,
+    "doppler_stop": 25
+  },
+  {
+    "label": "metal",
+    "prob": 0.5006000399589539,
+    "range_start": 124,
+    "doppler_start": 10,
+    "range_stop": 132,
+    "doppler_stop": 31
+  },
+  {
+    "label": "metal",
+    "prob": 0.5006000399589539,
+    "range_start": 204,
+    "doppler_start": 10,
+    "range_stop": 208,
+    "doppler_stop": 17
+  },
+  {
+    "label": "metal",
+    "prob": 0.5006000399589539,
+    "range_start": 240,
+    "doppler_start": 10,
+    "range_stop": 250,
+    "doppler_stop": 16
+  },
+  {
+    "label": "metal",
+    "prob": 0.5006000399589539,
+    "range_start": 275,
+    "doppler_start": 10,
+    "range_stop": 277,
+    "doppler_stop": 18
+  }
+]

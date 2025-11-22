@@ -1,0 +1,57 @@
+File (local): /mnt/data/deployment_design.pdf
+
+Below is the one-page deployment design text (you can copy-paste or use the PDF at the local path above).
+
+⸻
+
+Purpose
+
+Deploy a lightweight, near-real-time pipeline that processes FMCW radar frames and outputs detected hidden metal objects (range + doppler + label) for visualization and logging.
+
+System Overview
+
+Pipeline: Radar (ADC frames) → Preprocessing → Range FFT → Doppler FFT → RD Heatmap → CFAR-like Detection → Patch Extraction → Classifier → Output (JSON / REST / UI)
+	•	Input: Raw ADC chirp frames from Infineon 60 GHz sensor (or simulated frames).
+	•	Output: JSON list of detections: {range_start, range_stop, doppler_start, doppler_stop, label, prob} and annotated visual (RD + bounding boxes).
+
+Preprocessing & Filtering
+	•	Windowing: Hann window per chirp to reduce spectral leakage.
+	•	Range FFT: Per-chirp FFT to produce range bins.
+	•	Doppler FFT: Across-chirp FFT to produce Doppler bins.
+	•	Log power conversion: Convert magnitude to dB for contrast.
+	•	Background subtraction: Rolling median (N frames) to remove static clutter.
+	•	Denoise: 2D Gaussian + median filters; normalize per-range bin noise floor.
+
+Detection
+	•	CFAR-inspired thresholding using local noise estimates (configurable training/guard cells and Pfa).
+	•	Connected-component analysis on thresholded RD map to create proposals.
+	•	Proposal filters: Minimum area, SNR threshold, and doppler consistency checks to reduce false positives.
+
+Classification Flow
+	•	Patch extraction: Normalize proposals to model input size (e.g., 64×64).
+	•	Model: Lightweight CNN for final decision (server/edge). Fallback: SVM baseline when available.
+	•	Decision logic:
+	•	If CNN confidence ≥ T_high → accept class.
+	•	If T_low ≤ confidence < T_high → ensemble vote / mark for review.
+	•	If confidence < T_low → discard.
+
+API & Integration
+	•	REST endpoint (FastAPI / Flask): /infer accepts RD frames or proposals, returns JSON detections.
+	•	WebSocket optional for streaming visual updates to web UI.
+	•	Logging: Store detections and frames to file system or cloud storage for offline analysis.
+
+Performance Targets & Resources
+	•	Latency: target <200 ms per buffer (32–128 chirps) on entry-level GPU or optimized CPU.
+	•	Model footprint: < 10 MB after quantization (TFLite/ONNX).
+	•	Batching: Batch patch inference to reduce per-patch overhead.
+
+Limitations & Risks
+	•	Domain gap: Synthetic-trained model may not transfer perfectly to real hardware — domain adaptation needed.
+	•	Clutter & multipath: Can cause false positives and bounding-box fragmentation.
+	•	Large models / libs: TensorFlow / full environments increase deployment size; prefer quantized/stripped runtimes.
+
+Improvements & Roadmap
+	•	Collect small set of real captures for domain adaptation (fine-tune with contrastive / self-supervised methods).
+	•	Add temporal tracking (Kalman filter / SORT) to fuse detections across frames and reduce flicker.
+	•	Deploy optimized runtime (TensorRT / TFLite) and implement model quantization.
+	•	Consider moving heavy processing (FFT, CFAR) to native C/C++ module or GPU kernels for lower latency.
